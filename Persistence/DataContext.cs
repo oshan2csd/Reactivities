@@ -9,7 +9,7 @@ namespace Persistence
         {            
         }
         
-        //Thsi property name ("Activities") reflects the DB table name
+        //This property name ("Activities") reflects the DB table name
         public DbSet<Activity> Activities { get; set; }
     }
 }

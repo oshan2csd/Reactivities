@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Container} from 'semantic-ui-react';
 import { Activity } from '../models/activity';
 import NavBar from './NavBar';
 import ActivityDashboard from '../../features/activities/dashboard/ActivityDashboard';
 import {v4 as uuid} from 'uuid'
+import agent from '../api/agent';
+import LoadingComponent from './LoadingComponent';
 
 
 
@@ -13,20 +14,52 @@ function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<Activity | undefined>(undefined);//initial state is undefined
   const [editMode, setEditMode] = useState(false);//state variable for editing
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);//for submit edit/create 
+  
+  /**
+   * client-app is running on port 3000
+   * here it is trying to send a GET request from a different port (different domain)
+   * Browser security will stop this
+   * To allow that we need to add CORS support in Startup.cs class (to whitelist new port or domain)
+   * In Configure() and ConfigureServices()
+   */
+
+  /**
+   * Below code can be simplified further
+   * So it is commented
+   */
+
+  /**
+   useEffect(() => {
+     axios.get<Activity[]>('http://localhost:5000/api/activities')
+     .then( response => {
+       setActivities(response.data);
+     })
+     .catch(error => console.log(error))//optional
+   }, [])
+   */
 
 
-  //client-app is running on port 3000
-  //here it is trying to send a GET request from a different port (different domain)
-  //Browser security will stop this
-  //To allow that we need to add CORS support in Startup.cs class (to whitelist new port or domain)
-  //In Configure() and ConfigureServices()
+  /**
+   * The Equievalent of above code
+   * Most of above work done in agent.ts
+   */
   useEffect(() => {
-    axios.get<Activity[]>('http://localhost:5000/api/activities')
-    .then( response => {
-      setActivities(response.data);
+    agent.Activities.list()
+    .then(response => {
+      
+      //Take out Date part (from Date String)
+      let activities: Activity[] = [];
+      response.forEach(acti => {
+        acti.date = acti.date.split('T')[0];
+        activities.push(acti);
+      })
+      setActivities(activities);
+      setLoading(false);
     })
     .catch(error => console.log(error))//optional
-  }, [])
+  },[])
 
   function handleSelectActivity(id:string){
     setSelectedActivity(activities.find(x => x.id === id));
@@ -47,18 +80,43 @@ function App() {
   }
 
   function handleDeleteActivity(id:string){
-    setActivities([...activities.filter(x => x.id !== id)]);    
+    setSubmitting(true);
+    agent.Activities.delete(id).then(() => {
+      setActivities([...activities.filter(x => x.id !== id)]); 
+      setSubmitting(false);
+    })
+     
   }
 
   function handleCreateOrEditActivity(activity: Activity){
-    //using a conditional operator ? : to check if id exists
-    activity.id ?
-      setActivities([...activities.filter(x => x.id !== activity.id), activity])//remove edited activity and add it as new activity (with new values, but same id) 
-      //: setActivities([...activities, activity]);//new activity, need to assign an id as below
-      : setActivities([...activities, {...activity, id: uuid()}]);
-    setEditMode(false);
-    setSelectedActivity(activity);
+    setSubmitting(true);
+    if(activity.id){
+      agent.Activities.update(activity)
+      .then(() => {
+        setActivities([...activities.filter(x => x.id !== activity.id), activity]);//remove edited activity and add it as new activity (with new values, but same id) 
+        setSubmitting(false);
+        setSelectedActivity(activity);
+        setEditMode(false);
+      })      
+    }else{
+      activity.id = uuid();//Assign an Unique Id to new activity 
+      agent.Activities.create(activity)
+      .then(() => {
+        setActivities([...activities, activity]);
+        setSubmitting(false);
+        setSelectedActivity(activity);
+        setEditMode(false);
+      })
+    }    
+    
   }
+
+
+  /**
+   * Before painting the UI (NavBar, Dashboard etc..)
+   * Check status of loading and display if required   
+   */
+  if(loading) return <LoadingComponent />
 
 
   return (
@@ -75,6 +133,7 @@ function App() {
           closeForm = {handleFormClose}
           createOrEdit = {handleCreateOrEditActivity}
           deleteActivity = {handleDeleteActivity}
+          submitting = {submitting}
         />
       </Container>        
     </>

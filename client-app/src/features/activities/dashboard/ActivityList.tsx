@@ -21,8 +21,10 @@ export default function ActivityList({activities, selectActivity, deleteActivity
      * 
      */ 
     function handleActivityDelete(e: SyntheticEvent<HTMLButtonElement>, id:string){
-        setTarget(e.currentTarget.name);
-        deleteActivity(id);
+        if(window.confirm("Do you want to delete this activity?")){
+            setTarget(e.currentTarget.name);
+            deleteActivity(id);
+        }
     }
 
     return(

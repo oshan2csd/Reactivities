@@ -53,6 +53,7 @@ mono_crash.*
 
 #oshan
 appsettings.json
+reactivities.db
 
 # Build results
 [Dd]ebug/

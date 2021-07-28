@@ -1,31 +1,24 @@
 import { observer } from 'mobx-react-lite';
 import  { SyntheticEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Item, Label, Segment } from 'semantic-ui-react';
 import { useStore } from '../../../app/stores/store';
 
 export default observer(function ActivityList(){
 
     const {activityStore} = useStore();
-    const {activitiesByDate, selectActivity, deleteActivity, loading} = activityStore
-
+    const {activitiesByDate, deleteActivity, loading} = activityStore
     
-    /**
-     * Setting loading icon just for the deleting button
-     */
+    //Setting loading icon just for the deleting button
     const [target, setTarget] = useState('');
 
-    /**
-     * All mouse events coming from SyntheticEvent
-     * 
-     */ 
+    //Note: All mouse events coming from SyntheticEvent 
     function handleActivityDelete(e: SyntheticEvent<HTMLButtonElement>, id:string){
         if(window.confirm("Do you want to delete this activity?")){
             setTarget(e.currentTarget.name);
             deleteActivity(id);
         }
     }
-
-
 
     return(
         <Segment>
@@ -41,7 +34,8 @@ export default observer(function ActivityList(){
                             </Item.Description>
                             <Item.Extra>
                                 <Button 
-                                    onClick={() => selectActivity(activity.id)} 
+                                    //onClick={() => selectActivity(activity.id)} 
+                                    as={Link} to={`/activities/${activity.id}`}
                                     floated='right' 
                                     content='View' 
                                     color='blue'/>

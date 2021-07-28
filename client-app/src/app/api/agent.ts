@@ -36,6 +36,15 @@ const requests = {
     del: <T> (url: string) => axios.delete<T>(url).then(responseBody)
 }
 
+
+ /**
+   * client-app is running on port 3000
+   * here it is trying to send requests to a different port (different domain) (see base URL)
+   * Browser security will stop this
+   * To allow that we need to add CORS support in Startup.cs class (to whitelist new port or domain)
+   * In Configure() and ConfigureServices()
+*/
+
 //object to store requests for Activity
 const Activities = {
     list: () => requests.get<Activity[]>('/activities'), //Base URL will automatically bind here
